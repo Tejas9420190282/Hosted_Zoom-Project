@@ -15,7 +15,7 @@ const { Server } = require("socket.io");
 
 const app = express();
 
-app.use(cors({ origin: "*" /* "http://localhost:5173" */, credentials: true }));
+app.use(cors({ origin: "*", credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,6 +27,9 @@ app.use("/api", profile_Route);
 app.use("/api/room", room_Route);
 
 app.use("/api/chat", chat_Router);
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
 
 const PORT = process.env.PORT || 3000;
 
