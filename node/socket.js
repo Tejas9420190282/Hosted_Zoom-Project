@@ -3,6 +3,7 @@
 const { Server } = require("socket.io");
 const { mySqlPool } = require("./config/db");
 
+const connectedUsers = {};
 let io;
 
 const initializeSocket = (server) => {
@@ -17,15 +18,37 @@ const initializeSocket = (server) => {
     console.log(`User Connected: ${socket.id}`);
 
     // Join Room
-    socket.on("join-room", (data) => {
+    socket.on("join-room", async (data) => {
       socket.join(data.roomId);
 
-      console.log(`Socket ${socket.id} joined room ${data.roomId}`);
+      try {
+        const [rooms] = await mySqlPool.query(
+          `
+      SELECT id
+      FROM rooms
+      WHERE room_id = ?
+      `,
+          [data.roomId],
+        );
 
-      socket.to(data.roomId).emit("user-joined", {
-        type: "notification",
-        message: `${data.userName} joined the meeting`,
-      });
+        if (rooms.length > 0) {
+          connectedUsers[socket.id] = {
+            roomId: data.roomId,
+            roomDbId: rooms[0].id,
+            userId: data.userId,
+            userName: data.userName,
+          };
+        }
+
+        console.log(`Socket ${socket.id} joined room ${data.roomId}`);
+
+        socket.to(data.roomId).emit("user-joined", {
+          type: "notification",
+          message: `${data.userName} joined the meeting`,
+        });
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     socket.on("send-message", async (data) => {
@@ -114,17 +137,66 @@ const initializeSocket = (server) => {
       io.to(roomId).emit("meeting-ended", "Host has ended the meeting");
     });
 
-    socket.on("disconnect", () => {
-      console.log(`User Disconnected: ${socket.id}`);
+    socket.on("disconnect", async () => {
+      try {
+        console.log(`User Disconnected: ${socket.id}`);
+
+        const user = connectedUsers[socket.id];
+
+        if (!user) return;
+
+        await mySqlPool.query(
+          `
+      UPDATE room_participants
+      SET left_at = NOW()
+      WHERE room_id = ?
+      AND user_id = ?
+      AND left_at IS NULL
+      `,
+          [user.roomDbId, user.userId],
+        );
+
+        io.to(user.roomId).emit("user-left", {
+          type: "notification",
+          message: `${user.userName} disconnected`,
+        });
+
+        delete connectedUsers[socket.id];
+      } catch (error) {
+        console.error(error);
+      }
     });
 
-    socket.on("leave-room", (data) => {
-      socket.leave(data.roomId);
+    socket.on("leave-room", async (data) => {
+      try {
+        const user = connectedUsers[socket.id];
 
-      socket.to(data.roomId).emit("user-left", {
-        type: "notification",
-        message: `${data.userName} left the meeting`,
-      });
+        if (user) {
+          await mySqlPool.query(
+            `
+        UPDATE room_participants
+        SET left_at = NOW()
+        WHERE room_id = ?
+        AND user_id = ?
+        AND left_at IS NULL
+        `,
+            [user.roomDbId, user.userId],
+          );
+        }
+
+        delete connectedUsers[socket.id];
+
+        socket.leave(data.roomId);
+
+        socket.to(data.roomId).emit("user-left", {
+          type: "notification",
+          message: `${data.userName} left the meeting`,
+        });
+
+        delete connectedUsers[socket.id];
+      } catch (error) {
+        console.error(error);
+      }
     });
   });
 

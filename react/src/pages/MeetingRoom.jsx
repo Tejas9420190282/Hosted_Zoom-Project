@@ -402,10 +402,13 @@ function MeetingRoom() {
   };
 
   useEffect(() => {
-    socket.emit("join-room", {
-      roomId,
-      userName: currentUser?.name,
-    });
+  if (!currentUser) return;
+
+  socket.emit("join-room", {
+    roomId,
+    userId: currentUser.id,
+    userName: currentUser.name,
+  });
 
     socket.on("user-joined", async (data) => {
       createOffer();
@@ -432,7 +435,7 @@ function MeetingRoom() {
       setParticipants(response.data.participants);
     });
 
-    socket.on("user-left", (data) => {
+    socket.on("user-left", async (data) => {
       setMessages((prev) => [
         ...prev,
         {
@@ -441,6 +444,23 @@ function MeetingRoom() {
           type: "notification",
         },
       ]);
+
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/room/${roomId}/participants`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        setParticipants(response.data.participants);
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     socket.on("receive-message", (data) => {
@@ -527,7 +547,7 @@ function MeetingRoom() {
       socket.off("answer");
       socket.off("ice-candidate");
     };
-  }, [roomId, navigate]);
+  }, [roomId, navigate, currentUser, localStream]);
 
   useEffect(() => {
     chatContainerRef.current?.scrollTo({
