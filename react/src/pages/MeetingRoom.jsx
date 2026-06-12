@@ -402,13 +402,13 @@ function MeetingRoom() {
   };
 
   useEffect(() => {
-  if (!currentUser) return;
+    if (!currentUser) return;
 
-  socket.emit("join-room", {
-    roomId,
-    userId: currentUser.id,
-    userName: currentUser.name,
-  });
+    socket.emit("join-room", {
+      roomId,
+      userId: currentUser.id,
+      userName: currentUser.name,
+    });
 
     socket.on("user-joined", async (data) => {
       createOffer();
