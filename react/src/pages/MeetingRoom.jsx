@@ -34,6 +34,8 @@ function MeetingRoom() {
   const peerConnectionRef = useRef(null);
   const chatContainerRef = useRef(null);
 
+  const hasJoinedRoom = useRef(false);
+
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
 
@@ -404,11 +406,15 @@ function MeetingRoom() {
   useEffect(() => {
     if (!currentUser) return;
 
-    socket.emit("join-room", {
-      roomId,
-      userId: currentUser.id,
-      userName: currentUser.name,
-    });
+    if (!hasJoinedRoom.current) {
+      socket.emit("join-room", {
+        roomId,
+        userId: currentUser.id,
+        userName: currentUser.name,
+      });
+
+      hasJoinedRoom.current = true;
+    }
 
     socket.on("user-joined", async (data) => {
       createOffer();
@@ -547,7 +553,7 @@ function MeetingRoom() {
       socket.off("answer");
       socket.off("ice-candidate");
     };
-  }, [roomId, navigate, currentUser, localStream]);
+  }, [roomId, navigate, currentUser]);
 
   useEffect(() => {
     chatContainerRef.current?.scrollTo({

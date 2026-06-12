@@ -1,4 +1,4 @@
-// db.js
+// db.js (Localhost)
 /* 
 const mysql = require('mysql2/promise');
 
@@ -13,7 +13,8 @@ const mySqlPool = mysql.createPool({
 exports.mySqlPool = mySqlPool;
  */
 
-// db.js
+// db.js (Deployed)
+ 
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
