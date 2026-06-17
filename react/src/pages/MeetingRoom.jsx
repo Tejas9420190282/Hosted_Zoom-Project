@@ -259,17 +259,29 @@ function MeetingRoom() {
 
   const handleScreenShare = async () => {
     try {
-      // Stop Screen Sharing
+      if (!peerConnectionRef.current) {
+        alert("Connect another participant first");
+        return;
+      }
+
+      // STOP SCREEN SHARE
       if (isScreenSharing) {
-        screenStreamRef.current?.getTracks().forEach((track) => {
-          track.stop();
-        });
+        screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+
+        const cameraTrack = localStream
+          ?.getVideoTracks()
+          ?.find((track) => track.kind === "video");
+
+        const sender = peerConnectionRef.current
+          .getSenders()
+          .find((s) => s.track?.kind === "video");
+
+        if (sender && cameraTrack) {
+          await sender.replaceTrack(cameraTrack);
+        }
 
         if (localVideoRef.current) {
-          localVideoRef.current.srcObject = null;
-          /* localVideoRef.current.srcObject = screenStream; */
           localVideoRef.current.srcObject = localStream;
-          await localVideoRef.current.play();
         }
 
         setIsScreenSharing(false);
@@ -277,13 +289,23 @@ function MeetingRoom() {
         return;
       }
 
-      // Start Screen Sharing
+      // START SCREEN SHARE
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: true,
+        audio: false,
       });
 
       screenStreamRef.current = screenStream;
+
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      const sender = peerConnectionRef.current
+        .getSenders()
+        .find((s) => s.track?.kind === "video");
+
+      if (sender) {
+        await sender.replaceTrack(screenTrack);
+      }
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = screenStream;
@@ -291,12 +313,21 @@ function MeetingRoom() {
 
       setIsScreenSharing(true);
 
-      // User clicks "Stop Sharing" from browser popup
-      screenStream.getVideoTracks()[0].onended = async () => {
+      screenTrack.onended = async () => {
+        const cameraTrack = localStream
+          ?.getVideoTracks()
+          ?.find((track) => track.kind === "video");
+
+        const sender = peerConnectionRef.current
+          .getSenders()
+          .find((s) => s.track?.kind === "video");
+
+        if (sender && cameraTrack) {
+          await sender.replaceTrack(cameraTrack);
+        }
+
         if (localVideoRef.current) {
-          localVideoRef.current.srcObject = null;
           localVideoRef.current.srcObject = localStream;
-          await localVideoRef.current.play();
         }
 
         setIsScreenSharing(false);
