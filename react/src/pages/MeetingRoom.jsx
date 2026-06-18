@@ -700,12 +700,14 @@ function MeetingRoom() {
                     {isCameraOn ? (
                       <>
                         {/* Remote User BIG */}
-                        <video
-                          ref={remoteVideoRef}
-                          autoPlay
-                          playsInline
-                          className="w-full h-full rounded-xl object-cover bg-black"
-                        />
+                        <div className="w-full h-full flex items-center justify-center">
+                          <video
+                            ref={remoteVideoRef}
+                            autoPlay
+                            playsInline
+                            className="w-[70%] h-[70%] rounded-xl object-cover bg-black"
+                          />
+                        </div>
 
                         {/* Self Camera SMALL */}
                         <video
