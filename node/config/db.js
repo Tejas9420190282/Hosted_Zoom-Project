@@ -11,7 +11,7 @@ const mySqlPool = mysql.createPool({
 });
 
 exports.mySqlPool = mySqlPool;
- */
+*/
 
 // db.js (Deployed)
  
