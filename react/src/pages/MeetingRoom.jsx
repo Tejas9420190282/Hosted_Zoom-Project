@@ -417,6 +417,10 @@ function MeetingRoom() {
 
   const createOffer = async () => {
     try {
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+      }
+
       const peer = createPeerConnection();
 
       const offer = await peer.createOffer();
@@ -436,6 +440,8 @@ function MeetingRoom() {
 
   useEffect(() => {
     if (!currentUser) return;
+
+    if (!localStream) return;
 
     if (!hasJoinedRoom.current) {
       socket.emit("join-room", {
@@ -531,6 +537,10 @@ function MeetingRoom() {
 
     socket.on("offer", async (data) => {
       try {
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.close();
+        }
+
         const peer = createPeerConnection();
 
         await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -584,7 +594,7 @@ function MeetingRoom() {
       socket.off("answer");
       socket.off("ice-candidate");
     };
-  }, [roomId, navigate, currentUser]);
+  }, [roomId, navigate, currentUser, localStream]);
 
   useEffect(() => {
     chatContainerRef.current?.scrollTo({
