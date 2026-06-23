@@ -215,14 +215,14 @@ function MeetingRoom() {
     setIsMicOn(audioTrack.enabled);
   };
 
-  const handleCameraToggle = async () => {
+  /* const handleCameraToggle = async () => {
     try {
       // Turn Camera OFF
       if (isCameraOn) {
         const videoTrack = localStream?.getVideoTracks()[0];
 
         if (videoTrack) {
-          videoTrack.stop();
+          videoTrack.enabled = false;
         }
 
         setIsCameraOn(false);
@@ -230,7 +230,7 @@ function MeetingRoom() {
       }
 
       // Turn Camera ON
-      const newStream = await navigator.mediaDevices.getUserMedia({
+      /* const newStream = await navigator.mediaDevices.getUserMedia({
         video: true,
       });
 
@@ -250,6 +250,37 @@ function MeetingRoom() {
       }
 
       setLocalStream(updatedStream);
+
+      setIsCameraOn(true); .*
+
+      const videoTrack = localStream?.getVideoTracks()[0];
+
+      if (videoTrack) {
+        videoTrack.enabled = true;
+      }
+
+      setIsCameraOn(true);
+    } catch (error) {
+      console.error("Camera Toggle Error:", error);
+    }
+  }; */
+
+  const handleCameraToggle = async () => {
+    try {
+      const videoTrack = localStream?.getVideoTracks()[0];
+
+      if (!videoTrack) return;
+
+      // Camera OFF
+      if (isCameraOn) {
+        videoTrack.enabled = false;
+
+        setIsCameraOn(false);
+        return;
+      }
+
+      // Camera ON
+      videoTrack.enabled = true;
 
       setIsCameraOn(true);
     } catch (error) {
@@ -415,12 +446,16 @@ function MeetingRoom() {
     return peer;
   };
 
-  const createOffer = async () => {
+  /* const createOffer = async () => {
     try {
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
       }
 
+      const peer = createPeerConnection(); */
+
+  const createOffer = async () => {
+    try {
       const peer = createPeerConnection();
 
       const offer = await peer.createOffer();
@@ -535,12 +570,16 @@ function MeetingRoom() {
       navigate("/home");
     });
 
-    socket.on("offer", async (data) => {
+    /* socket.on("offer", async (data) => {
       try {
         if (peerConnectionRef.current) {
           peerConnectionRef.current.close();
         }
 
+        const peer = createPeerConnection(); */
+
+    socket.on("offer", async (data) => {
+      try {
         const peer = createPeerConnection();
 
         await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -707,38 +746,30 @@ function MeetingRoom() {
               <div className="flex-1 bg-[#1c1c1c] rounded-xl flex items-center justify-center">
                 <div className="flex-1 bg-[#1c1c1c] rounded-xl flex items-center justify-center">
                   <div className="relative w-full h-full flex items-center justify-center p-4">
-                    {isCameraOn ? (
-                      <>
-                        {/* Remote User BIG */}
-                        <video
-                          ref={remoteVideoRef}
-                          autoPlay
-                          playsInline
-                          className="w-[1200px] h-[600px] rounded-xl object-cover bg-black"
-                        />
+                    <>
+                      {/* Remote User BIG */}
+                      <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-[1200px] h-[600px] rounded-xl object-cover bg-black"
+                      />
 
-                        {/* Self Camera SMALL */}
+                      {/* Self Camera SMALL */}
+                      {isCameraOn ? (
                         <video
                           ref={localVideoRef}
                           autoPlay
                           muted
                           playsInline
-                          className="absolute bottom-5 right-5 w-30 h-20 rounded-lg border-2 border-white object-cover bg-black shadow-lg"
+                          className="absolute bottom-5 right-5 w-32 h-24 rounded-lg border-2 border-white object-cover bg-black shadow-lg"
                         />
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="w-32 h-32 rounded-full bg-blue-600 text-white text-5xl font-bold flex items-center justify-center">
+                      ) : (
+                        <div className="absolute bottom-5 right-5 w-32 h-24 rounded-lg border-2 border-white bg-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
                           {currentUser?.name?.charAt(0)?.toUpperCase()}
                         </div>
-
-                        <p className="mt-4 text-white text-xl">
-                          {currentUser?.name}
-                        </p>
-
-                        <p className="text-gray-400">Camera Off</p>
-                      </div>
-                    )}
+                      )}
+                    </>
 
                     <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg">
                       {currentUser?.name}
