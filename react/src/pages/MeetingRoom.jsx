@@ -46,12 +46,6 @@ function MeetingRoom() {
 
   const [meetingTime, setMeetingTime] = useState(0);
 
-  /* useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]); */
-
   useEffect(() => {
     if (isCameraOn && localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
@@ -221,56 +215,6 @@ function MeetingRoom() {
     setIsMicOn(audioTrack.enabled);
   };
 
-  /* const handleCameraToggle = async () => {
-    try {
-      // Turn Camera OFF
-      if (isCameraOn) {
-        const videoTrack = localStream?.getVideoTracks()[0];
-
-        if (videoTrack) {
-          videoTrack.enabled = false;
-        }
-
-        setIsCameraOn(false);
-        return;
-      }
-
-      // Turn Camera ON
-      /* const newStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-
-      const newVideoTrack = newStream.getVideoTracks()[0];
-
-      const updatedStream = new MediaStream();
-
-      if (newVideoTrack) {
-        updatedStream.addTrack(newVideoTrack);
-      }
-
-      // keep existing microphone
-      const audioTrack = localStream?.getAudioTracks()[0];
-
-      if (audioTrack && audioTrack.readyState === "live") {
-        updatedStream.addTrack(audioTrack);
-      }
-
-      setLocalStream(updatedStream);
-
-      setIsCameraOn(true); .*
-
-      const videoTrack = localStream?.getVideoTracks()[0];
-
-      if (videoTrack) {
-        videoTrack.enabled = true;
-      }
-
-      setIsCameraOn(true);
-    } catch (error) {
-      console.error("Camera Toggle Error:", error);
-    }
-  }; */
-
   const handleCameraToggle = async () => {
     try {
       const videoTrack = localStream?.getVideoTracks()[0];
@@ -301,6 +245,10 @@ function MeetingRoom() {
     }
   };
   const handleScreenShare = async () => {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    console.log("Mobile Device:", isMobile);
+
     try {
       if (!peerConnectionRef.current) {
         alert("Connect another participant first");
@@ -333,8 +281,28 @@ function MeetingRoom() {
       }
 
       // START SCREEN SHARE
+
+      // Check Screen Share Support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert("Screen sharing is not supported on this device/browser.");
+        return;
+      }
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert(
+          isMobile
+            ? "Screen sharing is not supported on this mobile browser."
+            : "Screen sharing is not supported.",
+        );
+        return;
+      }
+
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          frameRate: 15,
+        },
         audio: false,
       });
 
@@ -458,14 +426,6 @@ function MeetingRoom() {
     return peer;
   };
 
-  /* const createOffer = async () => {
-    try {
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
-
-      const peer = createPeerConnection(); */
-
   const createOffer = async () => {
     try {
       const peer = createPeerConnection();
@@ -581,14 +541,6 @@ function MeetingRoom() {
 
       navigate("/home");
     });
-
-    /* socket.on("offer", async (data) => {
-      try {
-        if (peerConnectionRef.current) {
-          peerConnectionRef.current.close();
-        }
-
-        const peer = createPeerConnection(); */
 
     socket.on("offer", async (data) => {
       try {
