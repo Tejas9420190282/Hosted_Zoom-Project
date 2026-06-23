@@ -704,7 +704,7 @@ function MeetingRoom() {
                           ref={remoteVideoRef}
                           autoPlay
                           playsInline
-                          className="w-[500px] h-[300px] rounded-xl object-cover bg-black"
+                          className="w-[1200px] h-[600px] rounded-xl object-cover bg-black"
                         />
 
                         {/* Self Camera SMALL */}
@@ -713,7 +713,7 @@ function MeetingRoom() {
                           autoPlay
                           muted
                           playsInline
-                          className="absolute bottom-5 right-5 w-64 h-40 rounded-lg border-2 border-white object-cover bg-black shadow-lg"
+                          className="absolute bottom-5 right-5 w-30 h-20 rounded-lg border-2 border-white object-cover bg-black shadow-lg"
                         />
                       </>
                     ) : (
