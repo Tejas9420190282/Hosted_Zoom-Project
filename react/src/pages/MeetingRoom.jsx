@@ -46,11 +46,17 @@ function MeetingRoom() {
 
   const [meetingTime, setMeetingTime] = useState(0);
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
     }
-  }, [localStream]);
+  }, [localStream]); */
+
+  useEffect(() => {
+    if (isCameraOn && localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [isCameraOn, localStream]);
 
   useEffect(() => {
     const getParticipants = async () => {
@@ -276,6 +282,7 @@ function MeetingRoom() {
         videoTrack.enabled = false;
 
         setIsCameraOn(false);
+
         return;
       }
 
@@ -283,11 +290,16 @@ function MeetingRoom() {
       videoTrack.enabled = true;
 
       setIsCameraOn(true);
+
+      setTimeout(() => {
+        if (localVideoRef.current && localStream) {
+          localVideoRef.current.srcObject = localStream;
+        }
+      }, 100);
     } catch (error) {
       console.error("Camera Toggle Error:", error);
     }
   };
-
   const handleScreenShare = async () => {
     try {
       if (!peerConnectionRef.current) {
