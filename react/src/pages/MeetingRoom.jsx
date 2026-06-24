@@ -709,14 +709,24 @@ function MeetingRoom() {
             <div className="flex flex-col h-full">
               <div className="flex-1 bg-[#1c1c1c] rounded-xl flex items-center justify-center">
                 <div className="flex-1 bg-[#1c1c1c] rounded-xl flex items-center justify-center">
-                  <div className="relative w-full h-full flex items-center justify-center p-4">
+                  <div className="relative w-full h-full flex items-center justify-center p-2 md:p-4 overflow-hidden">
                     <>
                       {/* Remote User BIG */}
                       <video
                         ref={remoteVideoRef}
                         autoPlay
                         playsInline
-                        className="w-[1200px] h-[600px] rounded-xl object-cover bg-black"
+                        className="
+    w-full
+    h-[250px]
+    sm:h-[350px]
+    md:h-[500px]
+    lg:w-[1200px]
+    lg:h-[600px]
+    rounded-xl
+    object-contain
+    bg-black
+  "
                       />
 
                       {/* Self Camera SMALL */}
@@ -726,7 +736,25 @@ function MeetingRoom() {
                           autoPlay
                           muted
                           playsInline
-                          className="absolute bottom-5 right-5 w-32 h-24 rounded-lg border-2 border-white object-cover bg-black shadow-lg"
+                          className="
+  absolute
+  bottom-3
+  right-3
+  w-20
+  h-16
+  sm:w-24
+  sm:h-20
+  md:w-28
+  md:h-20
+  lg:w-32
+  lg:h-24
+  rounded-lg
+  border-2
+  border-white
+  object-cover
+  bg-black
+  shadow-lg
+"
                         />
                       ) : (
                         <div className="absolute bottom-5 right-5 w-32 h-24 rounded-lg border-2 border-white bg-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
