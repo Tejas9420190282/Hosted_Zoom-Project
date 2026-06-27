@@ -118,6 +118,50 @@ function MeetingRoom() {
     setMessage("");
   };
 
+  const stopMeetingResources = () => {
+    // Stop camera & microphone
+    if (localVideoRef.current?.srcObject) {
+      localVideoRef.current.srcObject.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      localVideoRef.current.srcObject = null;
+    }
+
+    // Stop screen sharing
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      screenStreamRef.current = null;
+    }
+
+    // Remove remote stream
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+
+    // Close WebRTC
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.getSenders().forEach((sender) => {
+        try {
+          peerConnectionRef.current.removeTrack(sender);
+        } catch (error) {
+          console.log(error);
+        }
+      });
+
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+    }
+    setLocalStream(null);
+  };
+
   const handleLeaveRoom = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -136,6 +180,15 @@ function MeetingRoom() {
         roomId,
         userName: currentUser?.name,
       });
+
+      // NEW
+      stopMeetingResources();
+
+      socket.disconnect();
+
+      setIsCameraOn(false);
+      setIsMicOn(false);
+      setIsScreenSharing(false);
 
       navigate("/home");
     } catch (error) {
@@ -157,10 +210,17 @@ function MeetingRoom() {
         },
       );
 
-      // Notify all participants
       socket.emit("end-meeting", roomId);
 
+      // NEW
+      stopMeetingResources();
+      socket.disconnect();
+
       alert(response.data.message);
+
+      setIsCameraOn(false);
+      setIsMicOn(false);
+      setIsScreenSharing(false);
 
       navigate("/home");
     } catch (error) {
@@ -195,11 +255,31 @@ function MeetingRoom() {
         localVideoRef.current.srcObject
           .getTracks()
           .forEach((track) => track.stop());
+
+        localVideoRef.current.srcObject = null;
       }
 
-      screenStreamRef.current?.getTracks().forEach((track) => {
-        track.stop();
-      });
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => track.stop());
+
+        screenStreamRef.current = null;
+      }
+
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.getSenders().forEach((sender) => {
+          try {
+            peerConnectionRef.current.removeTrack(sender);
+          } catch (error) {
+            console.log(error);
+          }
+        });
+
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, []);
 
@@ -472,6 +552,10 @@ function MeetingRoom() {
     if (!currentUser) return;
 
     if (!localStream) return;
+
+    if (!socket.connected) {
+      socket.connect();
+    }
 
     if (!hasJoinedRoom.current) {
       socket.emit("join-room", {
