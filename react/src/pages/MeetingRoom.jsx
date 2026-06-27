@@ -386,6 +386,29 @@ function MeetingRoom() {
     alert("Room ID copied successfully");
   };
 
+  const handleShareMeeting = async () => {
+    try {
+      const meetingLink = `${window.location.origin}/meeting/${roomId}`;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Join my VideoConnect Meeting",
+          text: `${currentUser?.name} invited you to join a VideoConnect meeting.`,
+          url: meetingLink,
+        });
+
+        return;
+      }
+
+      // Fallback
+      await navigator.clipboard.writeText(meetingLink);
+
+      alert("Meeting link copied successfully.");
+    } catch (error) {
+      console.error("Share Error:", error);
+    }
+  };
+
   const createPeerConnection = () => {
     const peer = new RTCPeerConnection({
       iceServers: [
@@ -618,14 +641,23 @@ function MeetingRoom() {
 
                 <p className="text-sm text-gray-500 mt-1">Room ID</p>
 
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="font-mono text-blue-600">{roomId}</p>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <p className="font-mono text-blue-600 break-all">{roomId}</p>
 
+                  {/* Copy Room ID */}
                   <button
                     onClick={handleCopyRoomId}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
                   >
-                    Copy
+                    Copy ID
+                  </button>
+
+                  {/* Share Meeting Link */}
+                  <button
+                    onClick={handleShareMeeting}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition"
+                  >
+                    Share Link
                   </button>
                 </div>
               </div>
